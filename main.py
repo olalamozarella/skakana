@@ -1,6 +1,7 @@
 # system includes
 import argparse
 import tkinter
+import time
 import sys
 # project includes
 import Data
@@ -21,8 +22,10 @@ EXIT_CODES = dict(
     OTHER_ERROR=-1)
 
 
-def win(player, color):
+def win(player, color, confirm_needed):
     print("We have a winner! " + str(player) + "(" + str(color) + ") won")
+    if confirm_needed is True:
+        input("Press Enter to continue...")
     if color == Data.Color.White:
         if player == Data.Player.Human:
             return EXIT_CODES["HUMAN_WON_WHITE"]
@@ -41,8 +44,10 @@ def win(player, color):
     return EXIT_CODES["OTHER_ERROR"]
 
 
-def lose(player, color):
+def lose(player, color, confirm_needed):
     print("Too many incorrect moves! " + str(player) + "(" + str(color) + ") lost")
+    if confirm_needed is True:
+        input("Press Enter to continue...")
     if player == Data.Player.Human:
         return EXIT_CODES["HUMAN_STUCK"]
     elif player == Data.Player.AI1:
@@ -57,7 +62,7 @@ def lose(player, color):
 class Skakana:
     root, board, pieces, active_color, incorrect_move_counter = None, None, None, None, None
 
-    def __init__(self, orientation: Data.Orientation, headless: bool):
+    def __init__(self, orientation: Data.Orientation, headless: bool, delayed: bool):
         self.orientation = orientation
         upper_player = Data.Color.White if orientation == Data.Orientation.WhiteUp else Data.Color.Black
         lower_player = Data.Color.Black if orientation == Data.Orientation.WhiteUp else Data.Color.White
@@ -81,6 +86,7 @@ class Skakana:
         self.active_color = Data.Color.White
         self.incorrect_move_counter = 0
         self.headless = headless
+        self.delayed = delayed
         if headless is False:
             self.root = tkinter.Tk()
             self.board = Chessboard.Chessboard(self.root)
@@ -93,10 +99,6 @@ class Skakana:
 
         # play the game
         while True:
-            if self.headless is False:
-                self.board.draw_pieces(self.pieces)
-                self.root.update_idletasks()
-                self.root.update()
             if active_player == Data.Player.AI1:
                 print("Waiting for AI1's turn")
                 move = AI1.calculate_move(self.orientation, self.pieces, self.active_color)
@@ -110,10 +112,16 @@ class Skakana:
                 print("Incorrect move! " + str(move))
                 self.incorrect_move_counter += 1
                 if self.incorrect_move_counter >= 3:
-                    return lose(active_player, self.active_color)
+                    return lose(active_player, self.active_color, not self.headless)
             else:
+                if self.headless is False:
+                    self.board.draw_pieces(self.pieces)
+                    self.root.update_idletasks()
+                    self.root.update()
+                if self.delayed is True and active_player != Data.Player.Human:
+                    time.sleep(0.1)
                 if self.check_end() is True:
-                    return win(active_player, self.active_color)
+                    return win(active_player, self.active_color, not self.headless)
                 self.active_color = Data.Color.White if self.active_color == Data.Color.Black else Data.Color.Black
                 active_player = players[0] if active_player == players[1] else players[1]
                 self.incorrect_move_counter = 0
@@ -244,12 +252,13 @@ if __name__ == '__main__':
     parser.add_argument("player1", help="specify which player will play as white", choices=["Human", "AI1", "AI2"])
     parser.add_argument("player2", help="specify which player will play as black", choices=["Human", "AI1", "AI2"])
     parser.add_argument("--headless", help="run in shell only, no graphics", action="store_true")
+    parser.add_argument("--delayed", help="waits one second after each AI turn", action="store_true")
     args = parser.parse_args()
     player1 = parse_player_option(args.player1)
     player2 = parse_player_option(args.player2)
     if args.headless and (player1 == Data.Player.Human or player2 == Data.Player.Human):
         print("Humans cannot play on headless mode (how would you make your turn?)")
         sys.exit(EXIT_CODES["OTHER_ERROR"])
-    game = Skakana(Data.Orientation.WhiteUp, headless=args.headless)
+    game = Skakana(Data.Orientation.WhiteUp, headless=args.headless, delayed=args.delayed)
     result = game.run((player1, player2))
     sys.exit(result)

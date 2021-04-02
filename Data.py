@@ -11,7 +11,7 @@ Color = Enum('Color', 'Black White')
 Orientation = Enum('Orientation', 'WhiteUp BlackUp')
 
 # enum for all supported players
-Player = Enum('Player', 'Human AI1 AI2')
+Player = Enum('Player', 'Human Snake Frog Kangaroo')
 Players = (Player, Player)
 
 

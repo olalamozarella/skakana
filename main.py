@@ -6,8 +6,9 @@ import sys
 # project includes
 import Data
 import Chessboard
-import AI1
-import AI2
+import AI_snake
+import AI_frog
+import AI_kangaroo
 
 EXIT_CODES = dict(
     HUMAN_WON_WHITE=0,
@@ -99,12 +100,15 @@ class Skakana:
 
         # play the game
         while True:
-            if active_player == Data.Player.AI1:
-                print("Waiting for AI1's turn")
-                move = AI1.calculate_move(self.orientation, self.pieces, self.active_color)
-            elif active_player == Data.Player.AI2:
-                print("Waiting for AI2's turn")
-                move = AI2.calculate_move(self.orientation, self.pieces, self.active_color)
+            if active_player == Data.Player.Snake:
+                print("Waiting for snake's turn(" + str(self.active_color) + ")")
+                move = AI_snake.calculate_move(self.orientation, self.pieces, self.active_color)
+            elif active_player == Data.Player.Frog:
+                print("Waiting for frog's turn(" + str(self.active_color) + ")")
+                move = AI_frog.calculate_move(self.orientation, self.pieces, self.active_color)
+            elif active_player == Data.Player.Kangaroo:
+                print("Waiting for kangaroo's turn(" + str(self.active_color) + ")")
+                move = AI_kangaroo.calculate_move(self.orientation, self.pieces, self.active_color)
             else:
                 print("Waiting for player move in UI")
                 move = self.board.wait_for_move(self.root)
@@ -241,16 +245,18 @@ class Skakana:
 def parse_player_option(option):
     if option == "Human":
         return Data.Player.Human
-    if option == "AI1":
-        return Data.Player.AI1
-    if option == "AI2":
-        return Data.Player.AI2
+    if option == "Snake":
+        return Data.Player.Snake
+    if option == "Frog":
+        return Data.Player.Frog
+    if option == "Kangaroo":
+        return Data.Player.Kangaroo
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("player1", help="specify which player will play as white", choices=["Human", "AI1", "AI2"])
-    parser.add_argument("player2", help="specify which player will play as black", choices=["Human", "AI1", "AI2"])
+    parser.add_argument("player1", help="specify which player will play as white", choices=["Human", "Snake", "Frog", "Kangaroo"])
+    parser.add_argument("player2", help="specify which player will play as black", choices=["Human", "Snake", "Frog", "Kangaroo"])
     parser.add_argument("--headless", help="run in shell only, no graphics", action="store_true")
     parser.add_argument("--delayed", help="waits one second after each AI turn", action="store_true")
     args = parser.parse_args()
